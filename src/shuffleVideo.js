@@ -770,31 +770,32 @@ async function chooseRandomVideosFromPlaylist(playlistInfo, channelId, shouldUpd
 }
 
 // Applies a filter to the playlist object, based on the setting set in the popup
-function applyShuffleFilter(allVideos, videosByDate, activeShuffleFilterOption, activeOptionValue) {
-	let videosToShuffle;
-	switch (activeShuffleFilterOption) {
-		case "allVideosOption":
-			// For this option, no additional filtering is needed
-			videosToShuffle = videosByDate;
-			break;
+function applyShuffleFilter(allVideos, videosByDate, activeShuffleFilterOption, startDate, endDate) {
+    let videosToShuffle;
+    switch (activeShuffleFilterOption) {
+        case "allVideosOption":
+            // For this option, no additional filtering is needed
+            videosToShuffle = videosByDate;
+            break;
 
-		case "dateOption":
-			// Take only videos that were released after the specified date
-			videosToShuffle = videosByDate.filter((videoId) => {
-				return new Date(allVideos[videoId]) >= new Date(activeOptionValue);
-			});
-			// If the list is empty, alert the user
-			if (videosToShuffle.length === 0) {
-				throw new RandomYoutubeVideoError(
-					{
-						code: "RYV-8A",
-						message: `There are no videos that were released after the specified date (${activeOptionValue}).`,
-						solveHint: "Please change the date or use a different shuffle filter option.",
-						showTrace: false
-					}
-				);
-			}
-			break;
+        case "dateOption":
+            // Take only videos that were released between the specified start date and end date
+            videosToShuffle = videosByDate.filter((videoId) => {
+                const videoDate = new Date(allVideos[videoId]);
+                return videoDate >= new Date(startDate) && videoDate <= new Date(endDate);
+            });
+            // If the list is empty, alert the user
+            if (videosToShuffle.length === 0) {
+                throw new RandomYoutubeVideoError(
+                    {
+                        code: "RYV-8A",
+                        message: `There are no videos that match the date range specified (${startDate} - ${endDate}).`,
+                        solveHint: "Please change the date range or use a different shuffle filter option.",
+                        showTrace: false
+                    }
+                );
+            }
+            break;
 
 		case "videoIdOption":
 			// Take only videos that were released after the specified video
